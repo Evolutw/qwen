@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cmake: configure libtorch_qwen_3b",
+      "type": "shell",
+      "command": "/home/wx/miniconda3/envs/llm/bin/cmake",
+      "args": [
+        "-S",
+        "${workspaceFolder}/cpp",
+        "-B",
+        "${workspaceFolder}/cpp/build-debug",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_PREFIX_PATH=/home/wx/miniconda3/envs/llm/lib/python3.10/site-packages/torch/share/cmake",
+        "-DCUDAToolkit_ROOT=/home/wx/miniconda3/envs/llm",
+        "-DCMAKE_MAKE_PROGRAM=/home/wx/miniconda3/envs/llm/bin/make",
+        "-DCMAKE_C_COMPILER=/home/wx/miniconda3/envs/llm/bin/x86_64-conda-linux-gnu-cc",
+        "-DCMAKE_CXX_COMPILER=/home/wx/miniconda3/envs/llm/bin/x86_64-conda-linux-gnu-c++"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: build libtorch_qwen_3b",
+      "type": "shell",
+      "command": "/home/wx/miniconda3/envs/llm/bin/cmake",
+      "args": [
+        "--build",
+        "${workspaceFolder}/cpp/build-debug",
+        "-j",
+        "8"
+      ],
+      "problemMatcher": [],
+      "dependsOn": [
+        "cmake: configure libtorch_qwen_3b"
+      ]
+    },
+    {
+      "label": "run: qwen quick_chat_test",
+      "type": "shell",
+      "command": "${workspaceFolder}/cpp/build-debug/bin/quick_chat_test",
+      "options": {
+        "env": {
+          "PATH": "/home/wx/miniconda3/envs/llm/bin:${env:PATH}",
+          "LD_LIBRARY_PATH": "/home/wx/miniconda3/envs/llm/lib:${env:LD_LIBRARY_PATH}",
+          "QWEN_MODEL_DIR": "/home/wx/llm_learning/models/qwen2.5-3b-instruct",
+          "QWEN_WEIGHT_SHARDS_DIR": "/home/wx/llm_learning/models/qwen2.5-3b-instruct/weights_shards",
+          "QWEN_TOKENIZER_MODEL_DIR": "/home/wx/llm_learning/models/qwen2.5-3b-instruct",
+          "QWEN_TOKENIZER_SCRIPT": "/home/wx/llm_learning/libtorch_qwen_3b/scripts/qwen_tokenize.py",
+          "QWEN_PYTHON": "/home/wx/miniconda3/envs/llm/bin/python"
+        }
+      },
+      "problemMatcher": [],
+      "dependsOn": [
+        "cmake: build libtorch_qwen_3b"
+      ]
+    }
+  ]
+}

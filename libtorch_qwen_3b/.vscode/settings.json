@@ -1,0 +1,47 @@
+{
+  "cmake.sourceDirectory": "/home/wx/llm_learning/libtorch_qwen_3b/cpp",
+  "cmake.buildDirectory": "/home/wx/llm_learning/libtorch_qwen_3b/cpp/build-debug",
+  "cmake.cmakePath": "/home/wx/miniconda3/envs/llm/bin/cmake",
+  "cmake.buildType": "Debug",
+  "cmake.configureArgs": [
+    "-DCMAKE_BUILD_TYPE=Debug",
+    "-DCMAKE_PREFIX_PATH=/home/wx/miniconda3/envs/llm/lib/python3.10/site-packages/torch/share/cmake",
+    "-DCUDAToolkit_ROOT=/home/wx/miniconda3/envs/llm",
+    "-DCMAKE_MAKE_PROGRAM=/home/wx/miniconda3/envs/llm/bin/make",
+    "-DCMAKE_C_COMPILER=/home/wx/miniconda3/envs/llm/bin/x86_64-conda-linux-gnu-cc",
+    "-DCMAKE_CXX_COMPILER=/home/wx/miniconda3/envs/llm/bin/x86_64-conda-linux-gnu-c++",
+    "-DCMAKE_CUDA_HOST_COMPILER=/home/wx/miniconda3/envs/llm/bin/gcc"
+  ],
+  "cmake.environment": {
+    "PATH": "/home/wx/miniconda3/envs/llm/bin:${env:PATH}"
+  },
+  "cmake.debugConfig": {
+    "environment": [
+      {
+        "name": "LD_LIBRARY_PATH",
+        "value": "/home/wx/miniconda3/envs/llm/lib:${env:LD_LIBRARY_PATH}"
+      },
+      {
+        "name": "QWEN_MODEL_DIR",
+        "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct"
+      },
+      {
+        "name": "QWEN_WEIGHT_SHARDS_DIR",
+        "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct/weights_shards"
+      },
+      {
+        "name": "QWEN_TOKENIZER_MODEL_DIR",
+        "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct"
+      },
+      {
+        "name": "QWEN_TOKENIZER_SCRIPT",
+        "value": "/home/wx/llm_learning/libtorch_qwen_3b/scripts/qwen_tokenize.py"
+      },
+      {
+        "name": "QWEN_PYTHON",
+        "value": "/home/wx/miniconda3/envs/llm/bin/python"
+      }
+    ]
+  },
+  "cmake.ctest.testExplorerEnabled": false
+}

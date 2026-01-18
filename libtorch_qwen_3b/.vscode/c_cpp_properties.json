@@ -1,0 +1,20 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": [
+        "${workspaceFolder}/cpp/include",
+        "/home/wx/miniconda3/envs/llm/lib/python3.10/site-packages/torch/include",
+        "/home/wx/miniconda3/envs/llm/lib/python3.10/site-packages/torch/include/torch/csrc/api/include",
+        "/home/wx/miniconda3/envs/llm/include",
+        "/home/wx/miniconda3/envs/llm/targets/x86_64-linux/include"
+      ],
+      "defines": [],
+      "compilerPath": "/home/wx/miniconda3/envs/llm/bin/x86_64-conda-linux-gnu-g++",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "linux-gcc-x64"
+    }
+  ],
+  "version": 4
+}

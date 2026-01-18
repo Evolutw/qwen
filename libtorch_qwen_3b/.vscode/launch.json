@@ -1,0 +1,49 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Qwen quick_chat_test (Debug)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/cpp/build-debug/bin/quick_chat_test",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/cpp/build-debug",
+      "environment": [
+        {
+          "name": "LD_LIBRARY_PATH",
+          "value": "/home/wx/miniconda3/envs/llm/lib:${env:LD_LIBRARY_PATH}"
+        },
+        {
+          "name": "QWEN_MODEL_DIR",
+          "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct"
+        },
+        {
+          "name": "QWEN_WEIGHT_SHARDS_DIR",
+          "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct/weights_shards"
+        },
+        {
+          "name": "QWEN_TOKENIZER_MODEL_DIR",
+          "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct"
+        },
+        {
+          "name": "QWEN_TOKENIZER_SCRIPT",
+          "value": "/home/wx/llm_learning/libtorch_qwen_3b/scripts/qwen_tokenize.py"
+        },
+        {
+          "name": "QWEN_PYTHON",
+          "value": "/home/wx/miniconda3/envs/llm/bin/python"
+        }
+      ],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
