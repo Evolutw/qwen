@@ -43,79 +43,28 @@ endif()
 include_directories(include)
 
 # ============================================================
-# 测试程序 (Tests)
-# ============================================================
-add_executable(test_embedding src/tests/test_embedding.cpp)
-target_link_libraries(test_embedding "${TORCH_LIBRARIES}")
-
-add_executable(test_attention src/tests/test_attention.cpp)
-target_link_libraries(test_attention "${TORCH_LIBRARIES}")
-
-add_executable(test_transformer src/tests/test_transformer.cpp)
-target_link_libraries(test_transformer "${TORCH_LIBRARIES}")
-
-add_executable(test_qwen_model src/tests/test_qwen_model.cpp)
-target_link_libraries(test_qwen_model "${TORCH_LIBRARIES}")
-
-add_executable(test_qwen_simple src/tests/test_qwen_simple.cpp)
-target_link_libraries(test_qwen_simple "${TORCH_LIBRARIES}")
-
-add_executable(test_qwen_generate src/tests/test_qwen_generate.cpp)
-target_link_libraries(test_qwen_generate "${TORCH_LIBRARIES}")
-
-add_executable(test_qwen_chat src/tests/test_qwen_chat.cpp)
-target_link_libraries(test_qwen_chat "${TORCH_LIBRARIES}")
-
-add_executable(quick_test src/tests/quick_test.cpp)
-target_link_libraries(quick_test "${TORCH_LIBRARIES}")
-
-add_executable(final_test src/tests/final_test.cpp)
-target_link_libraries(final_test "${TORCH_LIBRARIES}")
-
-add_executable(test_repetition src/tests/test_repetition.cpp)
-target_link_libraries(test_repetition "${TORCH_LIBRARIES}")
-
-# ============================================================
 # 示例程序 (Examples)
 # ============================================================
 add_executable(quick_chat_test src/examples/quick_chat_test.cpp)
 target_link_libraries(quick_chat_test "${TORCH_LIBRARIES}")
 
-# ============================================================
-# 诊断工具 (Diagnostics)
-# ============================================================
-add_executable(diagnose_model src/diagnostics/diagnose_model.cpp)
-target_link_libraries(diagnose_model "${TORCH_LIBRARIES}")
-
-add_executable(diagnose_chat src/diagnostics/diagnose_chat.cpp)
-target_link_libraries(diagnose_chat "${TORCH_LIBRARIES}")
-
-add_executable(diagnose_hidden_states src/diagnostics/diagnose_hidden_states.cpp)
-target_link_libraries(diagnose_hidden_states "${TORCH_LIBRARIES}")
-
-add_executable(diagnose_second_token src/diagnostics/diagnose_second_token.cpp)
-target_link_libraries(diagnose_second_token "${TORCH_LIBRARIES}")
-
-add_executable(debug_chat src/diagnostics/debug_chat.cpp)
-target_link_libraries(debug_chat "${TORCH_LIBRARIES}")
+# 兼容旧的构建目标名（避免CMake Tools仍构建 test_qwen_chat）
+add_custom_target(test_qwen_chat DEPENDS quick_chat_test)
 
 # ============================================================
 # 输出目录设置
 # ============================================================
 set_target_properties(
-    test_embedding test_attention test_transformer 
-    test_qwen_model test_qwen_simple test_qwen_generate test_qwen_chat 
-    quick_test final_test quick_chat_test
-    diagnose_model diagnose_chat diagnose_hidden_states diagnose_second_token debug_chat
+    quick_chat_test
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
 # Windows需复制DLL，Linux无需
 if (MSVC)
     file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-    add_custom_command(TARGET test_embedding
+    add_custom_command(TARGET quick_chat_test
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${TORCH_DLLS}
-        $<TARGET_FILE_DIR:test_embedding>)
+        $<TARGET_FILE_DIR:quick_chat_test>)
 endif (MSVC)

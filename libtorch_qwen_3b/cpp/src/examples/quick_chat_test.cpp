@@ -8,36 +8,41 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <c10/cuda/CUDAGuard.h>
 
 // Qwen配置（统一入口）
 const auto& QWEN_CFG = qwen::get_model_config();
+const std::string MODEL_DIR = qwen::get_model_dir();
 const std::string WEIGHT_PATH = qwen::get_weight_path();
 const std::string TOKENIZER_SCRIPT = qwen::get_tokenizer_script();
 const std::string TOKENIZER_MODEL_DIR = qwen::get_tokenizer_model_dir();
 const std::string PYTHON_CMD = qwen::get_python_cmd();
 
 std::vector<int64_t> encode_chat(const std::string& user_message) {
-    std::string cmd = PYTHON_CMD + " " + TOKENIZER_SCRIPT + " \"" + user_message + "\" --chat 2>/dev/null";
+    std::string cmd = PYTHON_CMD + " " + TOKENIZER_SCRIPT + " \"" + user_message + "\" --chat";
     FILE* pipe = popen(cmd.c_str(), "r");
-    if (!pipe) throw std::runtime_error("分词失败");
-    
+    if (!pipe) throw std::runtime_error("分词失败: 无法启动分词脚本");
+
     char buffer[4096];
     std::string result;
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
         result += buffer;
     }
-    pclose(pipe);
-    
+    int status = pclose(pipe);
+
     std::vector<int64_t> token_ids;
     size_t start = result.find("[");
     size_t end = result.find("]");
-    if (start != std::string::npos && end != std::string::npos) {
+    if (start != std::string::npos && end != std::string::npos && end > start + 1) {
         std::string ids_str = result.substr(start + 1, end - start - 1);
         std::stringstream ss(ids_str);
         std::string item;
         while (std::getline(ss, item, ',')) {
             token_ids.push_back(std::stoll(item));
         }
+    }
+    if (status != 0 || token_ids.empty()) {
+        throw std::runtime_error("分词失败: 分词脚本无输出或返回非零状态");
     }
     return token_ids;
 }
@@ -118,11 +123,30 @@ torch::Tensor apply_repetition_penalty(torch::Tensor logits,
 int main() {
     std::cout << "======== 快速Chat测试 ========" << std::endl;
 
+    const char* force_cpu_env = std::getenv("QWEN_FORCE_CPU");
+    bool force_cpu = force_cpu_env && std::string(force_cpu_env) != "0";
+
+    std::cout << "CUDA可用: " << (torch::cuda::is_available() ? "Yes" : "No") << std::endl;
+    if (torch::cuda::is_available() && !force_cpu) {
+        std::cout << "CUDA设备数量: " << torch::cuda::device_count() << std::endl;
+        std::cout << "当前CUDA设备: " << c10::cuda::current_device() << std::endl;
+    }
+    if (force_cpu) {
+        std::cout << "⚠️ 已强制使用CPU (QWEN_FORCE_CPU=1)" << std::endl;
+    }
+
     try {
         qwen::ensure_required_paths(WEIGHT_PATH, TOKENIZER_SCRIPT, TOKENIZER_MODEL_DIR);
     } catch (const std::exception& e) {
         std::cerr << "❌ 路径配置错误: " << e.what() << std::endl;
         return 1;
+    }
+
+    if (!MODEL_DIR.empty()) {
+        setenv("QWEN_MODEL_DIR", MODEL_DIR.c_str(), 1);
+    }
+    if (!TOKENIZER_MODEL_DIR.empty()) {
+        setenv("QWEN_TOKENIZER_MODEL_DIR", TOKENIZER_MODEL_DIR.c_str(), 1);
     }
     
     // 设置随机种子
@@ -144,25 +168,38 @@ int main() {
     model->eval();
     model->load_weights(WEIGHT_PATH);
     
-    if (torch::cuda::is_available()) {
+    if (torch::cuda::is_available() && !force_cpu) {
         model->to(torch::kCUDA, torch::kBFloat16);
         std::cout << "✅ 使用CUDA" << std::endl;
     } else {
         model->to(torch::kCPU, torch::kBFloat16);
+    }
+
+    // 打印模型参数设备（取第一个参数）
+    for (const auto& p : model->parameters()) {
+        std::cout << "模型参数设备: " << p.device() << std::endl;
+        break;
     }
     
     std::cout << "\n测试: 你好" << std::endl;
     std::cout << "-------------------------------" << std::endl;
     
     // Encode
-    std::vector<int64_t> input_tokens = encode_chat("你好");
+    std::vector<int64_t> input_tokens;
+    try {
+        input_tokens = encode_chat("你好");
+    } catch (const std::exception& e) {
+        std::cerr << "❌ " << e.what() << std::endl;
+        return 1;
+    }
     torch::Tensor input_ids = torch::zeros({1, static_cast<long>(input_tokens.size())}, torch::kInt64);
     for (size_t i = 0; i < input_tokens.size(); ++i) {
         input_ids[0][i] = input_tokens[i];
     }
-    if (torch::cuda::is_available()) {
+    if (torch::cuda::is_available() && !force_cpu) {
         input_ids = input_ids.to(torch::kCUDA);
     }
+    std::cout << "input_ids设备: " << input_ids.device() << std::endl;
     
     std::cout << "用户: 你好" << std::endl;
     std::cout << "助手: " << std::flush;
@@ -171,6 +208,7 @@ int main() {
     model->clear_cache();
     torch::NoGradGuard no_grad;
     torch::Tensor logits = model->forward(input_ids, true);
+    std::cout << "logits设备: " << logits.device() << std::endl;
     
     // 应用repetition penalty并采样
     torch::Tensor next_logits = apply_repetition_penalty(logits[0][-1], {}, repetition_penalty);

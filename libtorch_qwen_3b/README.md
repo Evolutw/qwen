@@ -5,7 +5,7 @@
 ## 项目结构
 
 ```
-qwen_libtorch_deploy/
+libtorch_qwen_3b/
 ├── README.md                 # 项目说明
 ├── cpp/                      # C++实现
 │   ├── include/              # 头文件
@@ -17,38 +17,15 @@ qwen_libtorch_deploy/
 │   │   ├── qwen_layernorm.h  # RMSNorm
 │   │   └── qwen_transformer_block.h
 │   ├── src/
-│   │   ├── tests/            # 单元测试
-│   │   │   ├── test_embedding.cpp
-│   │   │   ├── test_attention.cpp
-│   │   │   ├── test_transformer.cpp
-│   │   │   ├── test_qwen_model.cpp
-│   │   │   ├── test_qwen_simple.cpp
-│   │   │   ├── test_qwen_generate.cpp
-│   │   │   ├── test_qwen_chat.cpp    # ChatML格式聊天测试
-│   │   │   ├── quick_test.cpp
-│   │   │   └── final_test.cpp
 │   │   ├── examples/         # 示例代码
 │   │   │   └── quick_chat_test.cpp   # 简单的聊天示例
-│   │   └── diagnostics/      # 诊断工具
-│   │       ├── diagnose_model.cpp
-│   │       ├── diagnose_chat.cpp
-│   │       ├── diagnose_hidden_states.cpp
-│   │       ├── diagnose_second_token.cpp
-│   │       └── debug_chat.cpp
 │   ├── CMakeLists.txt        # CMake构建配置
 │   └── build/                # 构建输出目录
 ├── scripts/                  # 脚本工具
 │   └── qwen_tokenize.py      # Python分词脚本
 ├── tools/                    # 辅助工具
-│   ├── check_weight_keys.py  # 检查权重键
-│   ├── compare_tokenizers.py # 分词器对比
 │   ├── convert.py            # 模型转换
-│   ├── diagnose_model.py     # Python诊断工具
-│   └── verify_tokenizer.py  # 分词器验证
-└── docs/                     # 文档
-    ├── README.md             # 详细文档
-    ├── PROJECT_SUMMARY.md    # 项目总结
-    └── TOKENIZER_EXPLAINED.md # 分词器说明
+│   └── split_weights.py      # 分片权重工具
 
 ```
 
@@ -80,9 +57,8 @@ qwen_libtorch_deploy/
 ### 2. 构建项目
 
 ```bash
-cd cpp/build
-cmake ..
-make
+cmake -S cpp -B cpp/build-debug
+cmake --build cpp/build-debug -j 8
 ```
 
 ### 3. 运行示例
@@ -91,11 +67,7 @@ make
 # 快速聊天测试（贪婪解码）
 ./bin/quick_chat_test
 
-# 完整聊天测试（温度采样）
-./bin/test_qwen_chat
-
-# 单元测试
-./bin/test_qwen_model
+./bin/quick_chat_test
 ```
 
 ## 核心实现

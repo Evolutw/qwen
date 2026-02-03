@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdlib>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include "qwen_model_config.h"
@@ -30,7 +31,14 @@ inline std::string model_dir_default() {
 inline std::string tokenizer_script_default() {
     auto root = project_root();
     if (!root.empty()) {
-        return root + "/scripts/qwen_tokenize.py";
+        std::string primary = root + "/scripts/qwen_tokenize.py";
+        if (std::filesystem::exists(primary)) {
+            return primary;
+        }
+        std::string fallback = root + "/../scripts/qwen_tokenize.py";
+        if (std::filesystem::exists(fallback)) {
+            return fallback;
+        }
     }
     return std::string();
 }
@@ -102,6 +110,12 @@ inline void ensure_required_paths(const std::string& weight_path,
     }
     if (tokenizer_model_dir.empty()) {
         throw std::runtime_error("Missing QWEN_TOKENIZER_MODEL_DIR (or QWEN_MODEL_DIR). Set env var before running.");
+    }
+    if (!std::filesystem::exists(tokenizer_script)) {
+        throw std::runtime_error("Tokenizer script not found: " + tokenizer_script);
+    }
+    if (!std::filesystem::exists(tokenizer_model_dir)) {
+        throw std::runtime_error("Tokenizer model dir not found: " + tokenizer_model_dir);
     }
 }
 

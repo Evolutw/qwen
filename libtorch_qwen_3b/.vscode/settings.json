@@ -1,6 +1,6 @@
 {
-  "cmake.sourceDirectory": "/home/wx/llm_learning/libtorch_qwen_3b/cpp",
-  "cmake.buildDirectory": "/home/wx/llm_learning/libtorch_qwen_3b/cpp/build-debug",
+  "cmake.sourceDirectory": "/home/wx/llm_learning/qwen/libtorch_qwen_3b/cpp",
+  "cmake.buildDirectory": "/home/wx/llm_learning/qwen/libtorch_qwen_3b/cpp/build-debug",
   "cmake.cmakePath": "/home/wx/miniconda3/envs/llm/bin/cmake",
   "cmake.buildType": "Debug",
   "cmake.configureArgs": [
@@ -15,6 +15,10 @@
   "cmake.environment": {
     "PATH": "/home/wx/miniconda3/envs/llm/bin:${env:PATH}"
   },
+  "cmake.buildTargets": [
+    "quick_chat_test"
+  ],
+  "cmake.launchTarget": "quick_chat_test",
   "cmake.debugConfig": {
     "environment": [
       {
@@ -22,20 +26,8 @@
         "value": "/home/wx/miniconda3/envs/llm/lib:${env:LD_LIBRARY_PATH}"
       },
       {
-        "name": "QWEN_MODEL_DIR",
-        "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct"
-      },
-      {
-        "name": "QWEN_WEIGHT_SHARDS_DIR",
-        "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct/weights_shards"
-      },
-      {
-        "name": "QWEN_TOKENIZER_MODEL_DIR",
-        "value": "/home/wx/llm_learning/models/qwen2.5-3b-instruct"
-      },
-      {
         "name": "QWEN_TOKENIZER_SCRIPT",
-        "value": "/home/wx/llm_learning/libtorch_qwen_3b/scripts/qwen_tokenize.py"
+        "value": "/home/wx/llm_learning/qwen/libtorch_qwen_3b/scripts/qwen_tokenize.py"
       },
       {
         "name": "QWEN_PYTHON",

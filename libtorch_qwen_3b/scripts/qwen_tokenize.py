@@ -5,7 +5,6 @@ Qwen分词器Python脚本
 """
 import os
 import sys
-import json
 from transformers import AutoTokenizer
 
 # Qwen模型路径（优先环境变量）
@@ -26,20 +25,21 @@ def tokenize(text: str, use_chat_template: bool = False) -> list:
 
     try:
         tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, trust_remote_code=True)
-        
+
         if use_chat_template:
-            # 使用ChatML格式
             messages = [{"role": "user", "content": text}]
-            formatted_text = tokenizer.apply_chat_template(
-                messages, 
-                tokenize=False, 
-                add_generation_prompt=True
-            )
-            token_ids = tokenizer.encode(formatted_text, add_special_tokens=False)
+            if hasattr(tokenizer, "apply_chat_template"):
+                token_ids = tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=True,
+                    add_generation_prompt=True
+                )
+            else:
+                formatted_text = f"<|im_start|>user\n{text}<|im_end|>\n<|im_start|>assistant\n"
+                token_ids = tokenizer.encode(formatted_text, add_special_tokens=False)
         else:
-            # 直接编码文本
             token_ids = tokenizer.encode(text, add_special_tokens=False)
-        
+
         return token_ids
     except Exception as e:
         print(f"分词失败: {e}", file=sys.stderr)
@@ -66,15 +66,9 @@ def main():
         print("错误：输入文本为空", file=sys.stderr)
         sys.exit(1)
     
-    # 分词并输出JSON格式
+    # 分词并输出token id列表（供C++解析）
     token_ids = tokenize(text, use_chat_template=use_chat)
-    result = {
-        "text": text,
-        "token_ids": token_ids,
-        "length": len(token_ids),
-        "chat_template": use_chat
-    }
-    print(json.dumps(result, ensure_ascii=False))
+    print(token_ids)
 
 if __name__ == "__main__":
     main()

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <filesystem>
 
 /**
  * 完整的Qwen 2.5模型
@@ -223,57 +224,62 @@ struct QwenModelImpl : torch::nn::Module {
 
             auto shards_dir = qwen::get_weight_shards_dir();
             if (!shards_dir.empty()) {
-                std::cout << "\n[Split Weights] 使用分片权重目录: " << shards_dir << std::endl;
-
-                // 1. Embedding
-                std::cout << "\n[1/4] 加载Embedding层..." << std::endl;
-                auto embed_dict = load_state_dict_from_file(shards_dir + "/embed_tokens.pt");
-                embed_tokens->load_weights(embed_dict);
-
-                // 2. Transformer layers
-                std::cout << "\n[2/4] 加载" << num_hidden_layers << "层Transformer Block..." << std::endl;
-                for (int i = 0; i < num_hidden_layers; ++i) {
-                    if (i % 6 == 0) {
-                        std::cout << "  进度: " << i << "/" << num_hidden_layers << std::endl;
-                    }
-                    auto layer_dict = load_state_dict_from_file(format_layer_path(shards_dir, i));
-                    layers[i]->load_weights(layer_dict);
-                }
-                std::cout << "  完成: " << num_hidden_layers << "/" << num_hidden_layers << std::endl;
-
-                // 3. Final norm
-                std::cout << "\n[3/4] 加载最终RMSNorm..." << std::endl;
-                auto norm_dict = load_state_dict_from_file(shards_dir + "/norm.pt");
-                auto norm_key = c10::IValue("model.norm.weight");
-                if (norm_dict.contains(norm_key)) {
-                    torch::Tensor weight = norm_dict.at(norm_key).toTensor();
-                    norm->load_weight(weight);
-                    std::cout << "  加载: model.norm.weight " << weight.sizes() << std::endl;
-                }
-
-                // 4. LMHead (optional)
-                std::cout << "\n[4/4] 加载LMHead（共享embedding权重）..." << std::endl;
-                std::string lm_head_path = shards_dir + "/lm_head.pt";
-                std::ifstream lm_file(lm_head_path);
-                if (lm_file.good()) {
-                    auto lm_dict = load_state_dict_from_file(lm_head_path);
-                    auto lm_head_key = c10::IValue("lm_head.weight");
-                    if (lm_dict.contains(lm_head_key)) {
-                        torch::Tensor weight = lm_dict.at(lm_head_key).toTensor();
-                        lm_head->weight.set_data(weight);
-                        std::cout << "  加载: lm_head.weight " << weight.sizes() << std::endl;
-                    }
+                std::string embed_path = shards_dir + "/embed_tokens.pt";
+                if (!std::filesystem::exists(embed_path)) {
+                    std::cout << "\n[Split Weights] 未找到分片权重文件，回退为整包权重加载: " << shards_dir << std::endl;
                 } else {
-                    std::cout << "  使用embedding权重（权重共享）" << std::endl;
-                    lm_head->weight.set_data(embed_tokens->embed_tokens->weight.data());
-                }
+                    std::cout << "\n[Split Weights] 使用分片权重目录: " << shards_dir << std::endl;
 
-                std::cout << "\n" << std::string(60, '=') << std::endl;
-                std::cout << "✅ Qwen模型权重加载完成" << std::endl;
-                std::cout << "  总层数: " << num_hidden_layers << std::endl;
-                std::cout << "  总参数: ~" << (num_hidden_layers * 4 + 2) << "个模块" << std::endl;
-                std::cout << std::string(60, '=') << std::endl;
-                return;
+                    // 1. Embedding
+                    std::cout << "\n[1/4] 加载Embedding层..." << std::endl;
+                    auto embed_dict = load_state_dict_from_file(embed_path);
+                    embed_tokens->load_weights(embed_dict);
+
+                    // 2. Transformer layers
+                    std::cout << "\n[2/4] 加载" << num_hidden_layers << "层Transformer Block..." << std::endl;
+                    for (int i = 0; i < num_hidden_layers; ++i) {
+                        if (i % 6 == 0) {
+                            std::cout << "  进度: " << i << "/" << num_hidden_layers << std::endl;
+                        }
+                        auto layer_dict = load_state_dict_from_file(format_layer_path(shards_dir, i));
+                        layers[i]->load_weights(layer_dict);
+                    }
+                    std::cout << "  完成: " << num_hidden_layers << "/" << num_hidden_layers << std::endl;
+
+                    // 3. Final norm
+                    std::cout << "\n[3/4] 加载最终RMSNorm..." << std::endl;
+                    auto norm_dict = load_state_dict_from_file(shards_dir + "/norm.pt");
+                    auto norm_key = c10::IValue("model.norm.weight");
+                    if (norm_dict.contains(norm_key)) {
+                        torch::Tensor weight = norm_dict.at(norm_key).toTensor();
+                        norm->load_weight(weight);
+                        std::cout << "  加载: model.norm.weight " << weight.sizes() << std::endl;
+                    }
+
+                    // 4. LMHead (optional)
+                    std::cout << "\n[4/4] 加载LMHead（共享embedding权重）..." << std::endl;
+                    std::string lm_head_path = shards_dir + "/lm_head.pt";
+                    std::ifstream lm_file(lm_head_path);
+                    if (lm_file.good()) {
+                        auto lm_dict = load_state_dict_from_file(lm_head_path);
+                        auto lm_head_key = c10::IValue("lm_head.weight");
+                        if (lm_dict.contains(lm_head_key)) {
+                            torch::Tensor weight = lm_dict.at(lm_head_key).toTensor();
+                            lm_head->weight.set_data(weight);
+                            std::cout << "  加载: lm_head.weight " << weight.sizes() << std::endl;
+                        }
+                    } else {
+                        std::cout << "  使用embedding权重（权重共享）" << std::endl;
+                        lm_head->weight.set_data(embed_tokens->embed_tokens->weight.data());
+                    }
+
+                    std::cout << "\n" << std::string(60, '=') << std::endl;
+                    std::cout << "✅ Qwen模型权重加载完成" << std::endl;
+                    std::cout << "  总层数: " << num_hidden_layers << std::endl;
+                    std::cout << "  总参数: ~" << (num_hidden_layers * 4 + 2) << "个模块" << std::endl;
+                    std::cout << std::string(60, '=') << std::endl;
+                    return;
+                }
             }
             
             // 读取权重文件

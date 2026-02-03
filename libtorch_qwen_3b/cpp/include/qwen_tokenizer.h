@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
 #include <array>
@@ -100,6 +101,14 @@ public:
      */
     QwenTokenizer(const std::string& script_path, const std::string& python_cmd = "auto")
         : python_script_path(script_path) {
+        auto model_dir = qwen::get_model_dir();
+        if (!model_dir.empty()) {
+            setenv("QWEN_MODEL_DIR", model_dir.c_str(), 1);
+        }
+        auto tokenizer_dir = qwen::get_tokenizer_model_dir();
+        if (!tokenizer_dir.empty()) {
+            setenv("QWEN_TOKENIZER_MODEL_DIR", tokenizer_dir.c_str(), 1);
+        }
         if (python_cmd == "auto") {
             python_command = detect_python_command();
             std::cout << "自动检测到Python命令: " << python_command << std::endl;

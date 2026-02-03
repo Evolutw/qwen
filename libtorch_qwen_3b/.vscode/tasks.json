@@ -45,7 +45,7 @@
           "QWEN_MODEL_DIR": "/home/wx/llm_learning/models/qwen2.5-3b-instruct",
           "QWEN_WEIGHT_SHARDS_DIR": "/home/wx/llm_learning/models/qwen2.5-3b-instruct/weights_shards",
           "QWEN_TOKENIZER_MODEL_DIR": "/home/wx/llm_learning/models/qwen2.5-3b-instruct",
-          "QWEN_TOKENIZER_SCRIPT": "/home/wx/llm_learning/libtorch_qwen_3b/scripts/qwen_tokenize.py",
+          "QWEN_TOKENIZER_SCRIPT": "/home/wx/llm_learning/qwen/libtorch_qwen_3b/scripts/qwen_tokenize.py",
           "QWEN_PYTHON": "/home/wx/miniconda3/envs/llm/bin/python"
         }
       },
